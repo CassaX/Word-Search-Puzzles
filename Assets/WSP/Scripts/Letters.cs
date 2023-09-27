@@ -8,6 +8,7 @@ public class Letters : MonoBehaviour {
 	public TextMesh letter;
 	public int gridX, gridY;
 
+
     void Start() {
         GetComponent<Renderer>().materials[0].color = WordSearch.Instance.defaultTint;
     }

@@ -1,4 +1,5 @@
-using UnityEngine; using System; 
+using UnityEngine; 
+using System; 
 using System.Collections; 
 using System.Collections.Generic;
 
@@ -10,6 +11,8 @@ public class WordSearch : MonoBehaviour {
     public int maxWordCount; // max number of words used
 	public int maxWordLetters; // max length of word used 
     public bool allowReverse; // if true, words can be selected in reverse order.
+    public bool reverse; // criacao das palavras com reverse
+    public bool allowDiagonal; // variavel para diagonal
     public int gridX, gridY; // grid dimensions
     public float sensitivity; // sensitivity of tiles when clicked
     public float spacing; // spacing between tiles
@@ -31,6 +34,7 @@ public class WordSearch : MonoBehaviour {
     private Ray ray;
     private RaycastHit hit;
     private int mark = 0;
+
 
     private static WordSearch instance;
     public static WordSearch Instance {
@@ -56,7 +60,7 @@ public class WordSearch : MonoBehaviour {
         if (maxWordCount <= 0) {
             maxWordCount = 1;
         }
-
+        Array.Resize(ref words,words.Length - 1);
         Mix(words);
         Mathf.Clamp(maxWordLetters, 0, gridY < gridX ? gridX : gridY);
        
@@ -121,7 +125,7 @@ public class WordSearch : MonoBehaviour {
 		if (Input.GetMouseButton (0)) {
 			ray = Camera.main.ScreenPointToRay (Input.mousePosition);
 			if (Physics.Raycast (ray, out hit)) {
-				current = hit.transform.gameObject;
+                current = hit.transform.gameObject;
 			}
 			ready = true;
 		}
@@ -184,8 +188,23 @@ public class WordSearch : MonoBehaviour {
                 while (directionX == 0 && directionY == 0) {
                     directionX = rn.Next(3) - 1;
                     directionY = rn.Next(3) - 1;
-                }                
-                placed = InsertWord(s.ToLower(), row, column, directionX, directionY);
+                }               
+                if(!reverse){
+                    if(directionX < 0)
+                        directionX *= -1;
+                    if(directionY < 0)
+                        directionY *= -1;
+                }
+                 
+                if(directionX != 0) {
+                    if(allowDiagonal)
+                        placed = InsertWord(s.ToLower(), row, column, directionX, directionY);
+                    else
+                        placed = InsertWord(s.ToLower(), row, column, directionX, 0);
+                }else
+                    placed = InsertWord(s.ToLower(), row, column, directionX, directionY);
+
+                    
                 mark++;
                 if (mark > 100) {
                     break;
@@ -228,6 +247,7 @@ public class WordSearch : MonoBehaviour {
 
         insertedWords.Add(word, false);
         char[] w = word.ToCharArray();
+        Debug.Log(row + "," + column);
         for (int i = 0; i < w.Length; i++) {
             matrix[(i * directionX) + row, (i * directionY) + column] = w[i].ToString();
             GameObject.Find("tile-" + ((i * directionX) + row).ToString() + "-" + ((i * directionY) + column).ToString()).GetComponent<Letters>().letter.text = w[i].ToString();
